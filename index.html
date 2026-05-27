@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WU DESIGN STUDIO — 伍設計事務所</title>
+    <link rel="icon" type="image/png" href="./assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.20/dist/lenis.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans TC', sans-serif; color: #333; background: #fff; overflow-x: hidden; padding-bottom: 350px; }
+        .en { font-family: Arial, sans-serif; }
+
+        /* ── HERO FEATURED GRID ─────────────────────────────── */
+        .hero {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            grid-template-rows: repeat(3, calc(85vh / 3));
+            height: 85vh;
+            gap: 3px;
+            background: #111;
+        }
+        .hero-cell {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            display: block;
+            text-decoration: none;
+        }
+        .hero-cell img, .hero-cell video {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: block;
+        }
+        .hero-cell:hover img, .hero-cell:hover video { transform: scale(1.05); }
+        .hero-main { grid-column: 1; grid-row: 1 / 4; }
+
+        .hero-cell-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 24px 28px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.6));
+            color: white; opacity: 0; transition: opacity 0.35s;
+        }
+        .hero-main .hero-cell-overlay { opacity: 1; background: linear-gradient(transparent, rgba(0,0,0,0.5)); }
+        .hero-cell:not(.hero-main):hover .hero-cell-overlay { opacity: 1; }
+
+        .hero-cell-meta { font-size: 12px; font-family: Arial, sans-serif; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+        .hero-cell-title { font-size: 16px; line-height: 1.5; }
+        .hero-main .hero-cell-title { font-size: 22px; }
+        .hero-cell-en { font-size: 13px; font-family: Arial, sans-serif; opacity: 0.75; display: block; margin-top: 4px; }
+        .hero-view-hint {
+            display: inline-block; margin-top: 14px;
+            background: white; color: #333;
+            padding: 10px 22px; border-radius: 25px;
+            font-size: 13px; font-family: Arial, sans-serif;
+        }
+
+        /* ── FILTER BAR ─────────────────────────────────────── */
+        .filter-bar {
+            display: flex; gap: 8px;
+            padding: 48px 60px 0; flex-wrap: wrap; align-items: center;
+        }
+        .filter-btn {
+            background: none; border: 1px solid #ddd;
+            padding: 7px 18px; border-radius: 20px;
+            font-size: 13px; font-family: Arial, sans-serif;
+            cursor: pointer; transition: all 0.2s; color: #aaa;
+        }
+        .filter-btn.active { background: #222; border-color: #222; color: #fff; }
+        .filter-btn:hover:not(.active) { border-color: #888; color: #444; }
+        .filter-count { font-size: 11px; color: #bbb; padding-left: 4px; font-family: Arial, sans-serif; }
+
+        /* ── PROJECTS GRID ──────────────────────────────────── */
+        .projects { padding: 36px 60px 80px; position: relative; background: #fff; z-index: 6; }
+        .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 1400px; margin: 0 auto; }
+
+        .project-item {
+            cursor: pointer; opacity: 0; transform: translateY(60px);
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: block; text-decoration: none;
+        }
+        .project-item.in-view { opacity: 1; transform: translateY(0); }
+        .project-item:hover { transform: translateY(-8px) scale(1.02); transition-delay: 0s !important; }
+
+        .project-image { width: 100%; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 8px; }
+        .project-image img, .project-image video {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform; display: block;
+        }
+        .project-item:hover .project-image img,
+        .project-item:hover .project-image video { transform: scale(1.1) !important; }
+
+        .project-info { padding: 20px 0; }
+        .project-category { font-size: 12px; color: #ccc; margin-bottom: 8px; font-family: Arial, sans-serif; }
+        .project-title { font-size: 16px; color: #333; line-height: 1.6; }
+        .project-title .en { font-size: 13px; opacity: 0.7; display: block; margin-top: 4px; }
+
+        /* ── DYNAMIC ISLAND ─────────────────────────────────── */
+        .dynamic-island {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 40px 60px 35px;
+            display: flex; align-items: center; justify-content: space-between; gap: 40px;
+            z-index: 10; border-top-left-radius: 40px; border-top-right-radius: 40px;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.06);
+            transform: translateY(100%); animation: slideUpIsland 0.8s ease 0.3s forwards;
+        }
+        @keyframes slideUpIsland { to { transform: translateY(0); } }
+        .island-left { display: flex; gap: 30px; align-items: center; }
+
+        .menu-toggle { display: flex; flex-direction: column; gap: 5px; cursor: pointer; padding: 8px; z-index: 1001; }
+        .menu-toggle span { width: 28px; height: 3px; background: #ccc; border-radius: 2px; transition: all 0.3s; }
+        .menu-toggle:hover span { background: #FF0000; }
+        .menu-toggle.open span:nth-child(1) { transform: rotate(45deg) translate(6px, 6px); }
+        .menu-toggle.open span:nth-child(2) { opacity: 0; }
+        .menu-toggle.open span:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
+
+        .menu-container { display: flex; gap: 30px; align-items: center; max-width: 0; overflow: hidden; opacity: 0; transition: all 0.4s; }
+        .menu-container.open { max-width: 400px; opacity: 1; }
+        .menu-item { cursor: pointer; transition: all 0.3s; flex-shrink: 0; display: block; }
+        .menu-item img { height: 28px; display: block; filter: brightness(0) saturate(100%) invert(80%); transition: all 0.3s; }
+        .menu-item:hover img { filter: brightness(0) saturate(100%) invert(18%) sepia(100%) saturate(7426%) hue-rotate(0deg); }
+        .menu-item.active img { filter: brightness(0) saturate(100%) invert(20%); }
+
+        .island-center { position: absolute; left: 50%; transform: translateX(-50%); z-index: 20; }
+        .island-center a { display: block; transition: opacity 0.3s; }
+        .island-center a:hover { opacity: 0.7; }
+        .island-center img { height: 60px; display: block; pointer-events: none; }
+
+        .island-right { flex: 1; text-align: right; line-height: 1.6; position: relative; height: 50px; }
+        .island-right .zh {
+            display: block; font-size: 15px; color: #333;
+            transition: opacity 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1);
+            position: absolute; right: 0; top: 0; width: 100%;
+        }
+        .island-right .en {
+            display: block; font-size: 13px; color: #666; font-family: Arial, sans-serif;
+            transition: opacity 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1);
+            position: absolute; right: 0; top: 24px; width: 100%;
+        }
+        .island-right .fade-out { opacity: 0; transform: translateY(-12px); }
+        .island-right .fade-in { opacity: 1; transform: translateY(0); }
+
+        /* ── FOOTER ─────────────────────────────────────────── */
+        footer { position: fixed; bottom: 0; left: 0; right: 0; background: #f2f2f2; color: #333; padding: 60px 80px 40px; z-index: 5; }
+        .footer-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 80px; }
+        .footer-left { display: flex; align-items: flex-start; }
+        .footer-logo-img { height: 28px; filter: brightness(0) saturate(100%) invert(80%); flex-shrink: 0; }
+        .footer-contact-info { display: flex; gap: 60px; }
+        .footer-right { display: flex; justify-content: flex-end; }
+        .footer-nav { display: flex; flex-direction: column; gap: 8px; }
+        .footer-nav-item a { font-size: 14px; color: #666; text-decoration: none; transition: color 0.3s; }
+        .footer-nav-item a:hover { color: #333; }
+        .footer-social { display: flex; flex-direction: column; gap: 8px; }
+        .footer-social-item a { font-size: 14px; color: #666; text-decoration: none; transition: color 0.3s; }
+        .footer-social-item a:hover { color: #333; }
+        .footer-bottom { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding-top: 30px; border-top: 1px solid #ddd; }
+        .back-to-top { font-size: 13px; color: #999; cursor: pointer; transition: color 0.3s; display: flex; align-items: center; gap: 5px; }
+        .back-to-top:hover { color: #333; }
+        .footer-copyright { font-size: 11px; color: #999; letter-spacing: 0.5px; }
+
+        /* ── RESPONSIVE ─────────────────────────────────────── */
+        @media (max-width: 968px) {
+            body { padding-bottom: 480px; }
+            .hero { grid-template-columns: 1fr 1fr; grid-template-rows: 50vw 30vw; height: auto; }
+            .hero-main { grid-column: 1 / 3; grid-row: 1; height: 50vw; }
+            .filter-bar { padding: 40px 30px 0; }
+            .projects { padding: 36px 30px 60px; }
+            .projects-grid { grid-template-columns: repeat(2, 1fr); gap: 30px; }
+            .dynamic-island { flex-direction: column; padding: 30px; border-top-left-radius: 28px; border-top-right-radius: 28px; }
+            .island-right { text-align: center; }
+            footer { padding: 50px 40px 35px; }
+            .footer-content { flex-direction: column; gap: 30px; align-items: flex-start; margin-bottom: 60px; }
+            .footer-right { justify-content: flex-start; }
+            .footer-contact-info { flex-direction: column; gap: 30px; }
+            .footer-bottom { flex-direction: column; gap: 20px; align-items: flex-start; }
+        }
+        @media (max-width: 640px) {
+            body { padding-bottom: 530px; }
+            .hero { grid-template-columns: 1fr; grid-template-rows: 60vw repeat(3, 35vw); height: auto; }
+            .hero-main { grid-column: 1; grid-row: 1; height: 60vw; }
+            .filter-bar { padding: 30px 20px 0; gap: 6px; }
+            .projects { padding: 30px 20px 50px; }
+            .projects-grid { grid-template-columns: 1fr; }
+            footer { padding: 40px 30px 30px; }
+            .footer-content { gap: 25px; margin-bottom: 50px; }
+            .footer-contact-info { gap: 25px; }
+            .footer-bottom { gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── HERO FEATURED GRID ───────────────────────────────────────────────
+         修改順序或替換作品：調整下方 4 個 .hero-cell 的 src 與 href 即可
+    ──────────────────────────────────────────────────────────────────────── -->
+    <section class="hero">
+
+        <!-- 主視覺：最強作品，佔左側全高 -->
+        <a href="./works/roller-skating-open" class="hero-cell hero-main">
+            <video src="./assets/project_I.mp4" autoplay loop muted playsinline></video>
+            <div class="hero-cell-overlay">
+                <div class="hero-cell-meta">Event / Identity</div>
+                <div class="hero-cell-title">
+                    台灣國際滑輪溜冰公開賽
+                    <span class="hero-cell-en">Taiwan International Roller Skating Open</span>
+                </div>
+                <span class="hero-view-hint">view &#8594;</span>
+            </div>
+        </a>
+
+        <!-- 右側小格 1 -->
+        <a href="./works/ovo" class="hero-cell">
+            <video src="./assets/OVO/VDesign_workIV.mp4" autoplay loop muted playsinline></video>
+            <div class="hero-cell-overlay">
+                <div class="hero-cell-meta">Motion / Illustration</div>
+                <div class="hero-cell-title">京典衛浴 <span class="hero-cell-en">OVO Toilet</span></div>
+            </div>
+        </a>
+
+        <!-- 右側小格 2 -->
+        <a href="./works/sung-hospital" class="hero-cell">
+            <img src="./assets/project_II.webp" alt="宋俊宏婦幼醫院" loading="eager">
+            <div class="hero-cell-overlay">
+                <div class="hero-cell-meta">Identity</div>
+                <div class="hero-cell-title">宋俊宏婦幼醫院 <span class="hero-cell-en">Sung Women &amp; Children's Hospital</span></div>
+            </div>
+        </a>
+
+        <!-- 右側小格 3 -->
+        <a href="./works/no-smoking" class="hero-cell">
+            <img src="./assets/project_VI.webp" alt="制菸所" loading="eager">
+            <div class="hero-cell-overlay">
+                <div class="hero-cell-meta">Packaging</div>
+                <div class="hero-cell-title">制菸所 <span class="hero-cell-en">No Smoking</span></div>
+            </div>
+        </a>
+
+    </section>
+
+    <!-- ── FILTER BAR ──────────────────────────────────────────────────────
+         新增分類：在 PROJECTS 資料裡加 categories 值，再加一個 .filter-btn 即可
+    ──────────────────────────────────────────────────────────────────────── -->
+    <div class="filter-bar" id="filterBar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="identity">Identity</button>
+        <button class="filter-btn" data-filter="event">Event</button>
+        <button class="filter-btn" data-filter="packaging">Packaging</button>
+        <button class="filter-btn" data-filter="motion">Motion</button>
+        <button class="filter-btn" data-filter="poster">Poster</button>
+        <span class="filter-count en" id="filterCount"></span>
+    </div>
+
+    <section class="projects">
+        <div class="projects-grid" id="projectsGrid"></div>
+    </section>
+
+    <!-- ── DYNAMIC ISLAND ─────────────────────────────────────────────────── -->
+    <div class="dynamic-island">
+        <div class="island-left">
+            <div class="menu-toggle" id="menuToggle">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="menu-container" id="menuContainer">
+                <a href="https://vdesign5.github.io/home/" class="menu-item active">
+                    <img src="./assets/project.webp" alt="project">
+                </a>
+                <a href="./works/about" class="menu-item">
+                    <img src="./assets/about.webp" alt="about">
+                </a>
+                <a href="#contact" class="menu-item js-contact-scroll">
+                    <img src="./assets/contact.webp" alt="contact">
+                </a>
+            </div>
+        </div>
+        <div class="island-center">
+            <a href="https://vdesign5.github.io/home/">
+                <img src="./assets/logo.png" alt="WU DESIGN STUDIO">
+            </a>
+        </div>
+        <div class="island-right">
+            <span class="zh">伍設計事務所，位於台灣</span>
+            <span class="en">Wu Design Studio, Based in Taiwan</span>
+        </div>
+    </div>
+
+    <footer id="contact">
+        <div class="footer-content">
+            <div class="footer-left">
+                <img src="./assets/contact.webp" alt="Contact" class="footer-logo-img">
+            </div>
+            <div class="footer-right">
+                <div class="footer-contact-info">
+                    <div class="footer-nav">
+                        <div class="footer-nav-item"><a href="mailto:bruce20020822@gmail.com">bruce20020822@gmail.com</a></div>
+                        <div class="footer-nav-item"><a href="tel:+886905592930">(+886) 905-592-930</a></div>
+                    </div>
+                    <div class="footer-social">
+                        <div class="footer-social-item"><a href="https://www.instagram.com/5_sheng_yao?igsh=MW92amc1M3Jib3M3cw%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">Instagram</a></div>
+                        <div class="footer-social-item"><a href="https://www.behance.net/69a7fe1c" target="_blank" rel="noopener noreferrer">Behance</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">&#8593; Go back to top</div>
+            <div class="footer-copyright en">&copy; 2025 WU DESIGN STUDIO. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+    <script>
+    /* ════════════════════════════════════════════════════════════
+       專案資料 — 新增作品只需在此陣列加一個物件，其餘自動渲染
+       ════════════════════════════════════════════════════════════
+       categories 可用值：identity / event / packaging / motion / poster
+       thumb.type：'img' 或 'video'
+    ════════════════════════════════════════════════════════════ */
+    var PROJECTS = [
+        {
+            titleZh: '台灣國際滑輪溜冰公開賽',
+            titleEn: 'Taiwan International Roller Skating Open',
+            categories: ['event', 'identity'],
+            label: 'Event / Identity',
+            descZh: '轉化高速殘影與終點線，具象滑輪競賽速度。',
+            descEn: 'Taiwan International Roller Skating Open',
+            href: './works/roller-skating-open',
+            thumb: { type: 'video', src: './assets/project_I.mp4' }
+        },
+        {
+            titleZh: '宋俊宏婦幼醫院',
+            titleEn: "Sung Women and Children's Hospital",
+            categories: ['identity'],
+            label: 'Identity',
+            descZh: '綻放花瓣承托母嬰，圓潤曲線傳達醫療溫度。',
+            descEn: "Sung Women and Children's Hospital",
+            href: './works/sung-hospital',
+            thumb: { type: 'img', src: './assets/project_II.webp' }
+        },
+        {
+            titleZh: '溱好國際有限公司',
+            titleEn: 'Jhen Hao International Ltd.',
+            categories: ['identity'],
+            label: 'Identity',
+            descZh: '屋簷與太陽構築JH，暖色調傳遞家的溫暖。',
+            descEn: 'Jhen Hao International Ltd.',
+            href: './works/jhen-hao',
+            thumb: { type: 'img', src: './assets/project_III.webp' }
+        },
+        {
+            titleZh: '京典衛浴',
+            titleEn: 'OVO Toilet',
+            categories: ['motion'],
+            label: 'Motion / Illustration',
+            descZh: '統整網頁、插畫與行銷視覺，傳遞品牌價值。',
+            descEn: 'OVO Toilet',
+            href: './works/ovo',
+            thumb: { type: 'video', src: './assets/OVO/VDesign_workIV.mp4' }
+        },
+        {
+            titleZh: null,
+            titleEn: 'Tears of War',
+            categories: ['poster'],
+            label: 'Poster',
+            descZh: '以鐵網組成落淚雙眼，凝視戰火下的焦慮。',
+            descEn: 'Tears of War',
+            href: './works/tear-of-war',
+            thumb: { type: 'img', src: './assets/project_V.webp' }
+        },
+        {
+            titleZh: '制菸所',
+            titleEn: 'No Smoking',
+            categories: ['packaging'],
+            label: 'Packaging',
+            descZh: '反直覺的阻礙結構，以不便引發吸菸反思。',
+            descEn: 'No Smoking',
+            href: './works/no-smoking',
+            thumb: { type: 'img', src: './assets/project_VI.webp' }
+        },
+        {
+            titleZh: '我在當機前未存檔',
+            titleEn: "I haven't saved my files yet.",
+            categories: ['event', 'motion'],
+            label: 'Event / Motion',
+            descZh: '轉化藍屏與雜訊，視覺化當機未存檔的無力。',
+            descEn: "I haven't saved my files yet.",
+            href: './works/error',
+            thumb: { type: 'video', src: './assets/Error/VDesign_work_VII_2.mp4' }
+        },
+        {
+            titleZh: null,
+            titleEn: 'Push &amp; Pull',
+            categories: ['event', 'poster'],
+            label: 'Event / Poster',
+            descZh: '黑白扭曲凹凸，表達心裡推拉的矛盾感受。',
+            descEn: 'Push & Pull',
+            href: './works/push-pull',
+            thumb: { type: 'img', src: './assets/project_VIII.webp' }
+        },
+        {
+            titleZh: '69翻轉，高師大好',
+            titleEn: 'Flips 69, NKNU Great',
+            categories: ['event', 'poster'],
+            label: 'Event / Poster',
+            descZh: '旋轉69融入笑臉，以明快色彩翻轉校慶視覺。',
+            descEn: 'Flips 69, NKNU Great',
+            href: './works/69',
+            thumb: { type: 'img', src: './assets/project_IX.webp' }
+        }
+    ];
+
+    /* ── 渲染作品格 ── */
+    function renderProjects(filter) {
+        var grid = document.getElementById('projectsGrid');
+        var count = 0;
+        grid.innerHTML = '';
+
+        PROJECTS.forEach(function(p) {
+            if (filter !== 'all' && p.categories.indexOf(filter) === -1) return;
+            count++;
+
+            var mediaEl = p.thumb.type === 'video'
+                ? '<video src="' + p.thumb.src + '" autoplay loop muted playsinline></video>'
+                : '<img src="' + p.thumb.src + '" alt="' + p.titleEn + '" loading="lazy">';
+
+            var titleHtml = p.titleZh
+                ? p.titleZh + '<span class="en">' + p.titleEn + '</span>'
+                : '<span class="en">' + p.titleEn + '</span>';
+
+            var el = document.createElement('a');
+            el.href = p.href;
+            el.className = 'project-item';
+            el.setAttribute('data-zh', p.descZh);
+            el.setAttribute('data-en', p.descEn);
+            el.innerHTML =
+                '<div class="project-image">' + mediaEl + '</div>' +
+                '<div class="project-info">' +
+                  '<div class="project-category">' + p.label + '</div>' +
+                  '<div class="project-title">' + titleHtml + '</div>' +
+                '</div>';
+            grid.appendChild(el);
+        });
+
+        document.getElementById('filterCount').textContent = count + ' works';
+        attachObserver();
+        attachHoverText();
+    }
+
+    /* ── 分類篩選 ── */
+    document.getElementById('filterBar').addEventListener('click', function(e) {
+        var btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        renderProjects(btn.getAttribute('data-filter'));
+    });
+
+    /* ── 進場動畫 ── */
+    function attachObserver() {
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08 });
+        document.querySelectorAll('.project-item').forEach(function(item) { observer.observe(item); });
+    }
+
+    /* ── 動態島懸停文字 ── */
+    var DEFAULT_ZH = '伍設計事務所，位於台灣';
+    var DEFAULT_EN = 'Wu Design Studio, Based in Taiwan';
+
+    function attachHoverText() {
+        var islandZh = document.querySelector('.island-right .zh');
+        var islandEn = document.querySelector('.island-right .en');
+
+        function setIsland(zh, en) {
+            islandZh.classList.remove('fade-in'); islandZh.classList.add('fade-out');
+            islandEn.classList.remove('fade-in'); islandEn.classList.add('fade-out');
+            setTimeout(function() {
+                islandZh.textContent = zh; islandEn.textContent = en;
+                islandZh.classList.remove('fade-out'); islandZh.classList.add('fade-in');
+                islandEn.classList.remove('fade-out'); islandEn.classList.add('fade-in');
+            }, 250);
+        }
+
+        document.querySelectorAll('.project-item').forEach(function(el) {
+            el.addEventListener('mouseenter', function() { setIsland(this.getAttribute('data-zh'), this.getAttribute('data-en')); });
+            el.addEventListener('mouseleave', function() { setIsland(DEFAULT_ZH, DEFAULT_EN); });
+        });
+    }
+
+    /* ── 視差滾動 ── */
+    var rafId;
+    function updateParallax() {
+        var wh = window.innerHeight;
+        document.querySelectorAll('.project-item').forEach(function(item) {
+            var r = item.getBoundingClientRect();
+            if (r.top < wh && r.bottom > 0 && !item.matches(':hover')) {
+                var media = item.querySelector('.project-image img, .project-image video');
+                if (media) media.style.transform = 'translateY(' + ((((wh - r.top) / (wh + r.height)) - 0.5) * 20) + 'px)';
+            }
+        });
+    }
+    window.addEventListener('scroll', function() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(updateParallax);
+    }, { passive: true });
+    window.addEventListener('resize', updateParallax);
+
+    /* ── 漢堡選單 ── */
+    var menuToggle = document.getElementById('menuToggle');
+    var menuContainer = document.getElementById('menuContainer');
+    menuToggle.addEventListener('click', function() {
+        menuToggle.classList.toggle('open');
+        menuContainer.classList.toggle('open');
+    });
+
+    /* ── Lenis 平滑滾動 ── */
+    var lenis = new Lenis({
+        duration: 1.2,
+        easing: function(t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
+        smoothWheel: true, smoothTouch: false
+    });
+    (function raf(time) { lenis.raf(time); requestAnimationFrame(raf); })(0);
+
+    var contactBtn = document.querySelector('.js-contact-scroll');
+    if (contactBtn) {
+        contactBtn.addEventListener('click', function(e) {
+            var target = document.getElementById('contact');
+            if (target) { e.preventDefault(); lenis.scrollTo(target, { duration: 1.4 }); }
+        });
+    }
+
+    /* ── 初始化 ── */
+    document.querySelector('.island-right .zh').classList.add('fade-in');
+    document.querySelector('.island-right .en').classList.add('fade-in');
+    renderProjects('all');
+    updateParallax();
+    </script>
+</body>
+</html>
